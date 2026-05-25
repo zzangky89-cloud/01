@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학생 작품 촬영 키오스크 시스템</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f3f4f6;
+      color: #222;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      display: grid;
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+
+    p.desc {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 14px;
+      border-radius: 12px;
+      border: 2px solid #ddd;
+      font-size: 1rem;
+      min-width: 220px;
+    }
+
+    button {
+      padding: 14px 18px;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: bold;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+    }
+
+    .primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .green {
+      background: #16a34a;
+      color: white;
+    }
+
+    .gray {
+      background: #555;
+      color: white;
+    }
+
+    .camera-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: auto;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      border-radius: 20px;
+      background: black;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .frame {
+      position: absolute;
+      inset: 8%;
+      border: 6px dashed rgba(255,255,255,0.95);
+      border-radius: 20px;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 14px;
+      color: white;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 12px;
+      color: #444;
+      font-weight: bold;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .art-card {
+      background: #fafafa;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid #e5e7eb;
+    }
+
+    .art-card img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .art-info {
+      padding: 12px;
+    }
+
+    .art-info h3 {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .art-info p {
+      color: #555;
+      font-size: 0.92rem;
+    }
+
+    .fullscreen-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 9999;
+      background: rgba(0,0,0,0.75);
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      backdrop-filter: blur(6px);
+    }
+
+    .kiosk-mode {
+      background: #111;
+      color: white;
+    }
+
+    .kiosk-mode .card {
+      background: #1f2937;
+      color: white;
+    }
+
+    .kiosk-mode input {
+      background: #111827;
+      color: white;
+      border: 2px solid #374151;
+    }
+
+    .kiosk-mode .art-card {
+      background: #111827;
+      border-color: #374151;
+    }
+
+    .kiosk-mode .art-info p {
+      color: #d1d5db;
+    }
+
+    .kiosk-mode .desc,
+    .kiosk-mode .status {
+      color: #d1d5db;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.6rem;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+
+      input, button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="fullscreenBtn" class="fullscreen-btn">⛶ 전체화면</button>
+  <div class="container">
+
+    <div class="card">
+      <h1>학생 작품 촬영 시스템</h1>
+      <p class="desc">
+        학생 이름을 입력하고 작품을 촬영하세요.<br>
+        작품 1 ~ 10까지 자동으로 저장됩니다.
+      </p>
+
+      <div class="controls">
+        <input type="text" id="studentName" placeholder="학생 이름 입력" />
+        <button class="primary" id="startBtn">카메라 시작</button>
+        <button class="green" id="captureBtn">사진 촬영</button>
+        <button class="gray" id="switchBtn">전면/후면 전환</button>
+      </div>
+
+      <div class="camera-wrapper">
+        <video id="video" autoplay playsinline></video>
+        <div class="frame" id="frameText">
+          작품 촬영 프레임
+        </div>
+      </div>
+
+      <div class="status" id="status">
+        카메라를 시작해주세요.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-bottom:16px; text-align:center;">촬영된 작품 목록</h2>
+      <div class="gallery" id="gallery"></div>
+    </div>
+
+  </div>
+
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const gallery = document.getElementById('gallery');
+    const studentNameInput = document.getElementById('studentName');
+    const statusText = document.getElementById('status');
+    const frameText = document.getElementById('frameText');
+
+    let stream = null;
+    let useFrontCamera = false;
+    let 작품번호 = 1;
+
+    async function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        document.body.classList.add('kiosk-mode');
+      } else {
+        await document.exitFullscreen();
+        document.body.classList.remove('kiosk-mode');
+      }
+    }
+
+    document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+
+    async function startCamera() {
+      try {
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: useFrontCamera ? 'user' : 'environment'
+          },
+          audio: false
+        });
+
+        video.srcObject = stream;
+
+        statusText.innerText = '카메라 연결 완료 - 키오스크 촬영 준비 완료';
+      } catch (err) {
+        alert('카메라 사용이 불가능합니다. HTTPS 환경 또는 카메라 권한을 확인하세요.');
+        console.error(err);
+      }
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startCamera);
+
+    document.getElementById('switchBtn').addEventListener('click', async () => {
+      useFrontCamera = !useFrontCamera;
+      await startCamera();
+    });
+
+    document.getElementById('captureBtn').addEventListener('click', () => {
+      const studentName = studentNameInput.value.trim();
+
+      if (!studentName) {
+        alert('학생 이름을 입력해주세요.');
+        return;
+      }
+
+      if (작품번호 > 10) {
+        alert('작품은 최대 10개까지 촬영 가능합니다.');
+        return;
+      }
+
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const imageData = canvas.toDataURL('image/jpeg');
+
+      const card = document.createElement('div');
+      card.className = 'art-card';
+
+      card.innerHTML = `
+        <img src="${imageData}" alt="작품 이미지">
+        <div class="art-info">
+          <h3>${studentName}</h3>
+          <p>작품 ${작품번호}</p>
+        </div>
+      `;
+
+      gallery.appendChild(card);
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = imageData;
+      downloadLink.download = `${작품번호}_${studentName}.jpg`;
+      downloadLink.click();
+
+      statusText.innerText = `${studentName} - 작품 ${작품번호} 저장 완료`;
+      frameText.innerText = `${studentName}의 작품 촬영 중`;
+
+      if (작품번호 <= 10) {
+        setTimeout(() => {
+          studentNameInput.focus();
+        }, 300);
+      }
+
+      if (작품번호 > 10) {
+        statusText.innerText = '작품 10개 촬영 완료';
+      }
+
+      작품번호++;
+    });
+  </script>
+</body>
+</html>
